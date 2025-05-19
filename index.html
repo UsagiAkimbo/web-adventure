@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Game Environment</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+        }
+
+        #videoFeed {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 160px;
+            height: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="text" id="urlInput" value="test.html" placeholder="Enter URL">
+        <button onclick="generateEnvironment()">Generate</button>
+        <p><input type="checkbox" id="motionToggle" onchange="toggleMotion()"> Use Motion Tracking</p>
+        <p id="motionStatus">Motion tracking off</p>
+        <p>Walk in place to move character (or use arrow keys).</p>
+    </div>
+    <video id="videoFeed" playsinline></video>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Load libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cheerio/1.0.0-rc.12/cheerio.min.js"
+            integrity="sha512-VqM5Cfr6O7nBeJUhHNRkZwMNAJBrTUpqTZOaLyVRkTLaYif5lcvNFV2yCuOx7cJSnmTgp212EczgT0kpuXFQoBA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+    <script src="parser.js"></script>
+    <script src="environment.js"></script>
+    <script>
+        // Fallback if Cheerio fails to load
+        if (typeof cheerio === 'undefined') {
+            console.warn('Cheerio not loaded. Using mock cheerio.');
+            window.cheerio = {
+                load: () => ({
+                    div: () => ({ length: 2 }),
+                    img: () => ({ length: 2 }),
+                    script: () => ({ length: 1 }),
+                    a: () => ({ length: 3 }),
+                    ul: () => ({ length: 1 }),
+                    span: () => ({ length: 2 }),
+                    style: () => ({ length: 1 }),
+                    p: () => ({ length: 2 }),
+                    meta: () => ({ length: 3 }),
+                    'h1,h2,h3,h4,h5,h6': () => ({ length: 2 })
+                })
+            };
+        }
+
+        // Initialize game
+        const canvas = document.getElementById('gameCanvas');
+        const generator = new EnvironmentGenerator(canvas);
+        const videoFeed = document.getElementById('videoFeed');
+        videoFeed.srcObject = generator.videoElement.srcObject;
+
+        // Generate environment from URL
+        async function generateEnvironment() {
+            const url = document.getElementById('urlInput').value;
+            const data = await parseHTML(url);
+            generator.generate(data);
+            console.log('Environment generated:', data);
+        }
+
+        // Toggle motion tracking
+        function toggleMotion() {
+            const enabled = document.getElementById('motionToggle').checked;
+            generator.useMotion = enabled;
+            if (enabled) {
+                generator.startMotionTracking();
+            } else {
+                document.getElementById('motionStatus').textContent = 'Motion tracking off';
+            }
+        }
+
+        // Generate default environment on load
+        generateEnvironment();
+    </script>
+</body>
+</html>
