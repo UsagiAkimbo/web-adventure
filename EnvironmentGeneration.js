@@ -167,7 +167,7 @@ class EnvironmentGenerator {
             const hazard = new THREE.Mesh(hazardGeometry, hazardMaterial);
             const x = data.isAquatic ? (Math.random() * 50 - 25) : (Math.random() * 40 - 20);
             const z = data.isAquatic ? (Math.random() * 50 - 25) : (Math.random() * 40 - 20);
-            resource.position.set(
+            hazard.position.set(
                 x,
                 (data.isAquatic ? -0.5 : this.getTerrainHeight(x, z)) + 0.5,
                 z
