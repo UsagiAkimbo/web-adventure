@@ -275,7 +275,7 @@ class EnvironmentGenerator {
             const interactable = new THREE.Mesh(enemyGeometry, interactableMaterial);
             interactable.position.set(
                 Math.random() * 40 - 20,
-                this.getTerrainHeight(interactable.position.x, structure.position.z) + 0.5,
+                this.getTerrainHeight(interactable.position.x, interactable.position.z) + 0.5,
                 Math.random() * 40 - 20
             );
             this.scene.add(interactable);
