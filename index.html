@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Game Environment</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            z-index: 10;
+        }
+
+        #wireframeCanvas {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 160px;
+            height: 120px;
+            background: rgba(0,0,0,0.5);
+            z-index: 5;
+            display: none;
+        }
+
+        #videoStatus, #poseStatus {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="text" id="urlInput" value="test.html" placeholder="Enter URL">
+        <button onclick="generateEnvironment()">Generate</button>
+        <p><input type="checkbox" id="motionToggle" onchange="toggleMotion()"> Use Motion Tracking</p>
+        <p><button onclick="cycleCamera()">Cycle Camera</button></p>
+        <p><input type="checkbox" id="turnMode" onchange="toggleTurnMode()"> Use Shoulders for Turning (uncheck for Hips)</p>
+        <p id="motionStatus">Motion tracking off</p>
+        <p id="videoStatus">No video stream</p>
+        <p id="poseStatus">Pose detection off</p>
+        <p>Walk in place to move, lean to turn, punch to interact (or use arrow keys).</p>
+    </div>
+    <canvas id="wireframeCanvas"></canvas>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Load libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.0.0/dist/pose-detection.min.js"></script>
+    <script src="https://docs.opencv.org/4.10.0/opencv.js"></script>
+    <script src="parser.js"></script>
+    <script src="EnvironmentGeneration.js"></script>
+    <script src="EnvironmentManagement.js"></script>
+    <script src="Player.js"></script>
+    <script src="MotionCapture.js"></script>
+    <script>
+        // Initialize modules
+        const canvas = document.getElementById('gameCanvas');
+        const envGen = new EnvironmentGenerator(canvas);
+        const envMan = new EnvironmentManager(envGen.scene);
+        const player = new Player(envGen.scene);
+        const motion = new MotionCapture(player);
+
+        // Verify initialization
+        console.log('envGen initialized:', !!envGen.getTerrainHeight);
+
+        // Generate environment from URL
+        async function generateEnvironment() {
+            const url = document.getElementById('urlInput').value;
+            const data = await parseHTML(url);
+            envGen.generate(data, player);
+            console.log('Environment generated:', data);
+        }
+
+        // Toggle motion tracking
+        async function toggleMotion() {
+            const enabled = document.getElementById('motionToggle').checked;
+            motion.useMotion = enabled;
+            player.useMotion = enabled;
+            if (enabled) {
+                await motion.startMotionTracking();
+                document.getElementById('wireframeCanvas').style.display = 'block';
+            } else {
+                await motion.stopMotionTracking();
+                document.getElementById('motionStatus').textContent = 'Motion tracking off';
+                document.getElementById('poseStatus').textContent = 'Pose detection off';
+                document.getElementById('wireframeCanvas').style.display = 'none';
+                document.getElementById('videoStatus').textContent = 'No video stream';
+            }
+        }
+
+        // Cycle camera
+        async function cycleCamera() {
+            await motion.cycleCamera();
+        }
+
+        // Toggle shoulder vs. hip turning
+        function toggleTurnMode() {
+            motion.useShoulders = document.getElementById('turnMode').checked;
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            envMan.update();
+            player.update(envGen.getTerrainHeight.bind(envGen));
+            envGen.renderer.render(envGen.scene, envGen.camera);
+        }
+        animate();
+
+        // Generate default environment on load
+        generateEnvironment();
+    </script>
+</body>
+</html>
