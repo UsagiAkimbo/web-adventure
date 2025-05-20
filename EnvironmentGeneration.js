@@ -142,7 +142,7 @@ class EnvironmentGenerator {
                 (data.isAquatic ? -0.5 : this.getTerrainHeight(x, z)) + 0.5,
                 z
             );
-            this.scene.add(structure);
+            this.scene.add(interactable);
         }
 
         // Vegetation (<form>): Green cones (trees)
