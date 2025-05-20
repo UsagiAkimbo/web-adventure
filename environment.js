@@ -294,7 +294,8 @@ class EnvironmentGenerator {
                 this.character.position.z + 10
             );
             this.camera.lookAt(this.character.position);
-        }
+        });
+    }
 
     getTerrainHeight(x, z) {
             if(!this.terrain) return 0;
