@@ -481,7 +481,7 @@ class EnvironmentGenerator {
         // Character with direction rectangle
         if (this.character) this.scene.remove(this.character);
         const characterGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.8, 16);
-        const characterMaterial = new THREE.MeshBasic onBasicMaterial({ color: 0x00ff00 });
+        const characterMaterial = new THREE.MeshBasic, onBasicMaterial({ color: 0x00ff00 });
         this.character = new THREE.Mesh(characterGeometry, characterMaterial);
 
         // Add blue rectangle for direction
